@@ -5,6 +5,8 @@ import Navbar from './components/layout/Navbar';
 import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
 import Footer from './components/layout/Footer';
+import ProtectedRoute from './routes/ProtectedRoute';
+import StudentDashboard from './pages/student/StudentDashboard';
 
 
 // function Login() {
@@ -21,20 +23,19 @@ import Footer from './components/layout/Footer';
 function App() {
   return (
     <BrowserRouter>
-
       <Navbar />
-
       <Routes>
-
         <Route path="/" element={<Home />} />
-
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path="/student/dashboard"
+            element={<StudentDashboard />}
+          />
+        </Route>
       </Routes>
-
       <Footer />
-
     </BrowserRouter>
   );
 }
