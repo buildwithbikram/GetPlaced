@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const jobRoutes = require('./routes/jobRoutes');
+const eligibilityRoutes = require('./routes/eligibilityRoutes');
 
 const PORT = 5000;
 
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/jobs', jobRoutes);
+app.use('/api/eligibility', eligibilityRoutes);
 
 app.listen(PORT, ()=>{
     console.log(`GetPlaced backend running on port ${PORT}`);
