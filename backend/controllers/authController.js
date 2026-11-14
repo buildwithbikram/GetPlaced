@@ -123,7 +123,8 @@ const getMe = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: 'Server error',
+      error: error.message
     });
   }
 };

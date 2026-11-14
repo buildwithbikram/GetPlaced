@@ -1,8 +1,7 @@
-const checkEligibility = (student, job) => {
+  const checkEligibility = (student, job) => {
   const reasons = [];
   const missingSkills = [];
 
-  // 1. Check CGPA
   if (student.cgpa == null) {
     reasons.push('Please add your CGPA to your profile.');
   } else if (student.cgpa < job.minimumCgpa) {
@@ -11,7 +10,6 @@ const checkEligibility = (student, job) => {
     );
   }
 
-  // 2. Check backlogs
   if (student.backlogs == null) {
     reasons.push('Please add your backlog information.');
   } else if (student.backlogs > job.maximumBacklogs) {
@@ -20,26 +18,30 @@ const checkEligibility = (student, job) => {
     );
   }
 
-  // 3. Check eligible branches
-  if (
-    job.eligibleBranches.length > 0 &&
-    !job.eligibleBranches.some(
-      branch =>
-        branch.toLowerCase() === student.branch?.trim().toLowerCase()
-    )
-  ) {
-    reasons.push('Your branch is not eligible for this job.');
-  }
+  
+const eligibleBranches = job.eligibleBranches || [];
 
-  // 4. Check graduation year
-  if (
-    job.eligibleGraduationYears.length > 0 &&
-    !job.eligibleGraduationYears.includes(student.graduationYear)
-  ) {
-    reasons.push('Your graduation year is not eligible.');
-  }
+if (
+  eligibleBranches.length > 0 &&
+  !eligibleBranches.some(
+    branch =>
+      branch.toLowerCase() === student.branch?.trim().toLowerCase()
+  )
+) {
+  reasons.push('Your branch is not eligible for this job.');
+}
 
-  // 5. Check required skills
+const eligibleGraduationYears =
+  job.eligibleGraduationYears || [];
+
+if (
+  eligibleGraduationYears.length > 0 &&
+  !eligibleGraduationYears.includes(student.graduationYear)
+) {
+  reasons.push('Your graduation year is not eligible.');
+}
+
+
   const studentSkills = (student.skills || []).map(skill =>
     skill.trim().toLowerCase()
   );
