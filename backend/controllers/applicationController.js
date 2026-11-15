@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const Application = require('../models/Application');
@@ -9,9 +8,6 @@ const {
   checkEligibility
 } = require('../services/eligibilityService');
 
-// @desc    Apply for a job
-// @route   POST /api/applications/:jobId
-// @access  Student only
 
 const applyForJob = async (req, res) => {
   try {
@@ -119,6 +115,58 @@ const applyForJob = async (req, res) => {
   }
 };
 
+
+const getMyApplications = async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(req.query.limit, 10) || 10)
+    );
+
+    const skip = (page - 1) * limit;
+
+    const [applications, totalApplications] = await Promise.all([
+      Application.find({
+        student: req.user.userId
+      })
+        .populate({
+          path: 'job',
+          select: 'title location jobType packageLPA applicationDeadline status company',
+          populate: {
+            path: 'company',
+            select: 'name industry location'
+          }
+        })
+        .sort({ appliedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      Application.countDocuments({
+        student: req.user.userId
+      })
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: applications.length,
+      totalApplications,
+      currentPage: page,
+      totalPages: Math.ceil(totalApplications / limit),
+      applications
+    });
+
+  } catch (error) {
+    console.error('Get my applications error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while fetching applications.'
+    });
+  }
+};
+
 module.exports = {
-  applyForJob
+  applyForJob, getMyApplications
 };

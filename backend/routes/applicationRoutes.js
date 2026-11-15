@@ -1,7 +1,7 @@
 const express = require('express');
 
 const {
-  applyForJob
+  applyForJob, getMyApplications
 } = require('../controllers/applicationController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -17,6 +17,12 @@ router.post(
   protect,
   authorizeRoles('student'),
   applyForJob
+);
+router.get(
+  '/my-applications',
+  protect,
+  authorizeRoles('student'),
+  getMyApplications
 );
 
 module.exports = router;
