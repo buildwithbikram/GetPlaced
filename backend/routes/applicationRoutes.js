@@ -1,7 +1,7 @@
 const express = require('express');
 
 const {
-  applyForJob, getMyApplications
+  applyForJob, getMyApplications, withdrawApplication
 } = require('../controllers/applicationController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -23,6 +23,12 @@ router.get(
   protect,
   authorizeRoles('student'),
   getMyApplications
+);
+router.patch(
+  '/:applicationId/withdraw',
+  protect,
+  authorizeRoles('student'),
+  withdrawApplication
 );
 
 module.exports = router;

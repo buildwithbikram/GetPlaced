@@ -167,6 +167,85 @@ const getMyApplications = async (req, res) => {
   }
 };
 
+
+const withdrawApplication = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    if (!mongoose.isValidObjectId(applicationId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid application ID.'
+      });
+    }
+
+    const application = await Application.findOneAndUpdate(
+      {
+        _id: applicationId,
+        student: req.user.userId,
+        status: { $in: ['applied', 'under-review'] }
+      },
+      {
+        $set: {
+          status: 'withdrawn',
+          withdrawnAt: new Date()
+        },
+        $push: {
+          statusHistory: {
+            status: 'withdrawn',
+            changedBy: req.user.userId,
+            note: 'Application withdrawn by student.'
+          }
+        }
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    ).populate({
+      path: 'job',
+      select: 'title company',
+      populate: {
+        path: 'company',
+        select: 'name'
+      }
+    });
+
+    if (!application) {
+      const existingApplication = await Application.findOne({
+        _id: applicationId,
+        student: req.user.userId
+      });
+
+      if (!existingApplication) {
+        return res.status(404).json({
+          success: false,
+          message: 'Application not found.'
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: `You cannot withdraw an application with status: ${existingApplication.status}.`
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Application withdrawn successfully.',
+      application
+    });
+
+  } catch (error) {
+    console.error('Withdraw application error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while withdrawing application.'
+    });
+  }
+};
+
 module.exports = {
-  applyForJob, getMyApplications
+  applyForJob, getMyApplications, withdrawApplication
 };
