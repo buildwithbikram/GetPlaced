@@ -246,6 +246,276 @@ const withdrawApplication = async (req, res) => {
   }
 };
 
+
+
+const getApplicantsForJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!mongoose.isValidObjectId(jobId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid job ID.'
+      });
+    }
+
+    const job = await Job.findById(jobId).populate(
+      'company',
+      'name industry location'
+    );
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found.'
+      });
+    }
+
+    const page = Math.max(
+      1,
+      parseInt(req.query.page, 10) || 1
+    );
+
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(req.query.limit, 10) || 10)
+    );
+
+    const skip = (page - 1) * limit;
+
+    const allowedStatuses = [
+      'applied',
+      'under-review',
+      'shortlisted',
+      'rejected',
+      'withdrawn'
+    ];
+
+
+    const filter = { job: jobId };
+
+    if (req.query.status) {
+      if (!allowedStatuses.includes(req.query.status)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid application status filter.'
+        });
+      }
+
+      filter.status = req.query.status;
+    }
+
+    const [applications, totalApplications] = await Promise.all([
+      Application.find(filter)
+        .populate(
+          'student',
+          'name email phone branch college cgpa graduationYear backlogs skills projects certifications'
+        )
+        .sort({ appliedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+
+      Application.countDocuments(filter)
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      job,
+      count: applications.length,
+      totalApplications,
+      currentPage: page,
+      totalPages: Math.ceil(totalApplications / limit),
+      applications
+    });
+
+  } catch (error) {
+    console.error('Get applicants for job error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while fetching job applicants.'
+    });
+  }
+};
+
+
+
+const getApplicationById = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+
+    if (!mongoose.isValidObjectId(applicationId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid application ID.'
+      });
+    }
+
+    const application = await Application.findById(applicationId)
+      .populate(
+        'student',
+        'name email phone branch college cgpa graduationYear backlogs skills projects certifications'
+      )
+      .populate({
+        path: 'job',
+        select: 'title description location jobType packageLPA minimumCgpa applicationDeadline status company',
+        populate: {
+          path: 'company',
+          select: 'name industry location website'
+        }
+      })
+      .populate(
+        'statusHistory.changedBy',
+        'name email role'
+      );
+
+    if (!application) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found.'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      application
+    });
+
+  } catch (error) {
+    console.error('Get application details error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while fetching application details.'
+    });
+  }
+};
+
+
+
+const updateApplicationStatus = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { status, note } = req.body;
+
+    if (!mongoose.isValidObjectId(applicationId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid application ID.'
+      });
+    }
+
+    const allowedTransitions = {
+      applied: ['under-review', 'rejected'],
+      'under-review': ['shortlisted', 'rejected'],
+      shortlisted: ['rejected'],
+      rejected: [],
+      withdrawn: []
+    };
+
+    const allowedStatuses = Object.keys(allowedTransitions);
+
+    if (!status || !allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid application status.'
+      });
+    }
+
+    if (
+      note !== undefined &&
+      (typeof note !== 'string' || note.trim().length > 500)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Note must be a string of at most 500 characters.'
+      });
+    }
+
+    const existingApplication = await Application.findById(
+      applicationId
+    );
+
+    if (!existingApplication) {
+      return res.status(404).json({
+        success: false,
+        message: 'Application not found.'
+      });
+    }
+
+    const currentStatus = existingApplication.status;
+
+    const permittedNextStatuses =
+      allowedTransitions[currentStatus] || [];
+
+    if (!permittedNextStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot change application status from ${currentStatus} to ${status}.`
+      });
+    }
+
+    const updatedApplication = await Application.findOneAndUpdate(
+      {
+        _id: applicationId,
+        status: currentStatus
+      },
+      {
+        $set: { status },
+        $push: {
+          statusHistory: {
+            status,
+            changedBy: req.user.userId,
+            note: note?.trim() || `Status changed to ${status}.`,
+            changedAt: new Date()
+          }
+        }
+      },
+      {
+        new: true,
+        runValidators: true
+      }
+    )
+      .populate('student', 'name email branch cgpa')
+      .populate({
+        path: 'job',
+        select: 'title company',
+        populate: {
+          path: 'company',
+          select: 'name'
+        }
+      })
+      .populate('statusHistory.changedBy', 'name email role');
+
+    if (!updatedApplication) {
+      return res.status(409).json({
+        success: false,
+        message: 'Application status changed by another request. Please refresh and try again.'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Application status updated to ${status}.`,
+      application: updatedApplication
+    });
+
+  } catch (error) {
+    console.error('Update application status error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while updating application status.'
+    });
+  }
+};
+
 module.exports = {
-  applyForJob, getMyApplications, withdrawApplication
+  applyForJob, 
+  getMyApplications, 
+  withdrawApplication, 
+  getApplicantsForJob, 
+  getApplicationById, 
+  updateApplicationStatus
 };
