@@ -1,44 +1,53 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
+
+import Navbar from './components/layout/Navbar';
+import Footer from './components/layout/Footer';
 
 import Home from './pages/public/Home';
-import Navbar from './components/layout/Navbar';
-import Register from './pages/auth/Register';
 import Login from './pages/auth/Login';
-import Footer from './components/layout/Footer';
-import ProtectedRoute from './routes/ProtectedRoute';
+import Register from './pages/auth/Register';
+
 import StudentDashboard from './pages/student/StudentDashboard';
 
+import ProtectedRoute from './routes/ProtectedRoute';
 
-// function Login() {
-//   return (
-//     <div className="min-h-screen flex items-center justify-center">
-//       <h1 className="text-3xl font-bold">
-//         Login
-//       </h1>
-//     </div>
-//   );
-// }
-
+// Layout for public pages
+const PublicLayout = () => {
+  return (
+    <>
+      <Navbar />
+      <Outlet />
+      <Footer />
+    </>
+  );
+};
 
 function App() {
   return (
     <BrowserRouter>
-      <Navbar />
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route element={<ProtectedRoute />}>
+
+        {/* Public routes */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+
+        {/* Student routes */}
+        <Route
+          element={<ProtectedRoute allowedRoles={['student']} />}
+        >
           <Route
             path="/student/dashboard"
             element={<StudentDashboard />}
           />
         </Route>
+
       </Routes>
-      <Footer />
     </BrowserRouter>
   );
 }
 
-
 export default App;
+
