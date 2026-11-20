@@ -5,7 +5,7 @@ import api from '../../services/api';
 
 const navigationItems = [
   { label: 'Dashboard', icon: '▦', active: true },
-  { label: 'My Profile', icon: '◉', comingSoon: true },
+  { label: 'My Profile', icon: '◉', comingSoon: false },
   { label: 'Browse Jobs', icon: '⌕', comingSoon: true },
   { label: 'My Applications', icon: '▤', comingSoon: true },
   { label: 'Notifications', icon: '♧', comingSoon: true },
@@ -47,11 +47,11 @@ function calculateProfileCompletion(profile) {
     Boolean(profile.college),
     profile.cgpa !== undefined && profile.cgpa !== null,
     profile.graduationYear !== undefined &&
-      profile.graduationYear !== null,
+    profile.graduationYear !== null,
     Array.isArray(profile.skills) && profile.skills.length > 0,
     Array.isArray(profile.projects) && profile.projects.length > 0,
     Array.isArray(profile.certifications) &&
-      profile.certifications.length > 0,
+    profile.certifications.length > 0,
   ];
 
   const completed = checks.filter(Boolean).length;
@@ -149,7 +149,7 @@ function StudentDashboard() {
 
         setError(
           err.response?.data?.message ||
-            'Unable to load dashboard data. Please try again.'
+          'Unable to load dashboard data. Please try again.'
         );
       } finally {
         if (isMounted) {
@@ -218,16 +218,20 @@ function StudentDashboard() {
                 key={item.label}
                 type="button"
                 disabled={item.comingSoon}
+                onClick={() => {
+                  if (item.label === 'My Profile') {
+                    navigate('/student/profile');
+                  }
+                }}
                 title={
                   item.comingSoon
                     ? 'This section will be available in an upcoming milestone.'
                     : item.label
                 }
-                className={`flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-medium transition ${
-                  item.active
+                className={`flex w-full items-center justify-between rounded-xl px-3 py-3 text-left text-sm font-medium transition ${item.active
                     ? 'bg-indigo-600 text-white'
                     : 'text-slate-400 hover:bg-white/5 hover:text-white disabled:cursor-not-allowed disabled:opacity-50'
-                }`}
+                  }`}
               >
                 <span className="flex items-center gap-3">
                   <span className="text-lg">{item.icon}</span>
