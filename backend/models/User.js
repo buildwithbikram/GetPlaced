@@ -71,8 +71,34 @@ const userSchema = new mongoose.Schema(
     certifications: {
       type: [String],
       default: []
+    },
+
+    resume: {
+      publicId: {
+        type: String,
+        default: null
+      },
+      originalName: {
+        type: String,
+        default: null
+      },
+      format: {
+        type: String,
+        enum: ['pdf', 'doc', 'docx', null],
+        default: null
+      },
+      size: {
+        type: Number,
+        default: null
+      },
+      uploadedAt: {
+        type: Date,
+        default: null
+      }
     }
+
   },
+  
   {
     timestamps: true
   }
