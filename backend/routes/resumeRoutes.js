@@ -1,6 +1,7 @@
 const express = require('express');
 
-const { protect, authorizeRoles } = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
+const { authorizeRoles } = require('../middleware/roleMiddleware');
 const uploadResumeFile = require('../middleware/resumeUploadMiddleware');
 
 const {

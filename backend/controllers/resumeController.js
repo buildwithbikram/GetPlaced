@@ -57,6 +57,7 @@ const uploadToCloudinary = (buffer, publicId) => {
         resource_type: 'raw',
         type: 'authenticated',
         public_id: publicId,
+        asset_folder: 'getplaced/resumes',
         overwrite: false,
       },
       (error, result) => {
