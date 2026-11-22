@@ -10,6 +10,10 @@ import Register from './pages/auth/Register';
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentProfile from './pages/student/StudentProfile';
 import StudentResume from './pages/student/StudentResume';
+import StudentCompanies from './pages/student/StudentCompanies';
+import StudentCompanyDetails from './pages/student/StudentCompanyDetails';
+import StudentJobs from './pages/student/StudentJobs';
+import StudentJobDetails from './pages/student/StudentJobDetails';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 
@@ -44,13 +48,35 @@ function App() {
             path="/student/dashboard"
             element={<StudentDashboard />}
           />
+
           <Route
             path='/student/profile'
             element={<StudentProfile />}
           />
+
           <Route
             path="/student/resume"
             element={<StudentResume />}
+          />
+          
+          <Route
+            path="/student/companies"
+            element={<StudentCompanies />}
+          />
+
+          <Route
+            path="/student/companies/:id"
+            element={<StudentCompanyDetails />}
+          />
+
+          <Route
+            path="/student/jobs"
+            element={<StudentJobs />}
+          />
+
+          <Route
+            path="/student/jobs/:id"
+            element={<StudentJobDetails />}
           />
         </Route>
 
