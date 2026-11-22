@@ -9,6 +9,7 @@ import Register from './pages/auth/Register';
 
 import StudentDashboard from './pages/student/StudentDashboard';
 import StudentProfile from './pages/student/StudentProfile';
+import StudentResume from './pages/student/StudentResume';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 
@@ -46,6 +47,10 @@ function App() {
           <Route
             path='/student/profile'
             element={<StudentProfile />}
+          />
+          <Route
+            path="/student/resume"
+            element={<StudentResume />}
           />
         </Route>
 

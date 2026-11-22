@@ -6,6 +6,7 @@ import api from '../../services/api';
 const navigationItems = [
   { label: 'Dashboard', icon: '▦', active: true },
   { label: 'My Profile', icon: '◉', comingSoon: false },
+  { label: 'Resume', icon: '▣', comingSoon: false },
   { label: 'Browse Jobs', icon: '⌕', comingSoon: true },
   { label: 'My Applications', icon: '▤', comingSoon: true },
   { label: 'Notifications', icon: '♧', comingSoon: true },
@@ -221,6 +222,9 @@ function StudentDashboard() {
                 onClick={() => {
                   if (item.label === 'My Profile') {
                     navigate('/student/profile');
+                  }
+                  if (item.label === 'Resume') {
+                    navigate('/student/resume');
                   }
                 }}
                 title={
