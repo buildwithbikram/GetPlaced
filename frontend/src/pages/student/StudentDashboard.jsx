@@ -9,7 +9,7 @@ const navigationItems = [
   { label: 'Resume', icon: '▣', comingSoon: false },
   { label: 'Companies', icon: '▥', comingSoon: false },
   { label: 'Browse Jobs', icon: '⌕', comingSoon: false },
-  { label: 'My Applications', icon: '▤', comingSoon: true },
+  { label: 'My Applications', icon: '▤', comingSoon: false },
   { label: 'Notifications', icon: '♧', comingSoon: true },
 ];
 
@@ -232,6 +232,9 @@ function StudentDashboard() {
                   }
                   if (item.label === 'Browse Jobs') {
                     navigate('/student/jobs');
+                  }
+                  if (item.label === 'My Applications') {
+                    navigate('/student/applications');
                   }
                 }}
                 title={

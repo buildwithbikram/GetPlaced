@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
@@ -12,6 +11,9 @@ function StudentJobDetails() {
   const [checking, setChecking] = useState(false);
   const [eligibility, setEligibility] = useState(null);
   const [error, setError] = useState('');
+  const [application, setApplication] = useState(null);
+  const [applying, setApplying] = useState(false);
+  const [applicationMessage, setApplicationMessage] = useState('');
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -23,7 +25,7 @@ function StudentJobDetails() {
 
         setError(
           err.response?.data?.message ||
-            'Unable to load job details.'
+          'Unable to load job details.'
         );
       } finally {
         setLoading(false);
@@ -31,7 +33,61 @@ function StudentJobDetails() {
     };
 
     fetchJob();
+    fetchExistingApplication();
   }, [id]);
+
+  const fetchExistingApplication = async () => {
+    try {
+      const firstResponse = await api.get(
+        '/applications/my-applications',
+        {
+          params: {
+            page: 1,
+            limit: 50,
+          },
+        }
+      );
+
+      const firstData = firstResponse.data;
+
+      let applications = firstData.applications || [];
+
+      let existingApplication = applications.find(
+        (item) => item.job?._id === id
+      );
+
+      // Search additional pages if necessary.
+      for (
+        let page = 2;
+        !existingApplication && page <= firstData.totalPages;
+        page++
+      ) {
+        const response = await api.get(
+          '/applications/my-applications',
+          {
+            params: {
+              page,
+              limit: 50,
+            },
+          }
+        );
+
+        applications = response.data.applications || [];
+
+        existingApplication = applications.find(
+          (item) => item.job?._id === id
+        );
+      }
+
+      setApplication(existingApplication || null);
+
+    } catch (err) {
+      console.error(
+        'Existing application check error:',
+        err
+      );
+    }
+  };
 
   const checkEligibility = async () => {
     try {
@@ -49,7 +105,7 @@ function StudentJobDetails() {
 
       setError(
         err.response?.data?.message ||
-          'Unable to check eligibility. Please try again.'
+        'Unable to check eligibility. Please try again.'
       );
     } finally {
       setChecking(false);
@@ -90,6 +146,52 @@ function StudentJobDetails() {
 
   const company = job.company || {};
 
+  const handleApply = async () => {
+    if (!eligibility?.canApply || application || applying) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to apply for ${job.title} at ${company.name || 'this company'}?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setApplying(true);
+      setError('');
+      setApplicationMessage('');
+
+      const response = await api.post(
+        `/applications/${id}`
+      );
+
+      setApplication(response.data.application);
+
+      setApplicationMessage(
+        response.data.message ||
+        'Job application submitted successfully.'
+      );
+
+    } catch (err) {
+      console.error('Job application error:', err);
+
+      setError(
+        err.response?.data?.message ||
+        'Unable to submit your application. Please try again.'
+      );
+
+      // Refresh application state if the backend reports
+      // that this student has already applied.
+      if (err.response?.status === 409) {
+        await fetchExistingApplication();
+      }
+
+    } finally {
+      setApplying(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="border-b border-gray-200 bg-white">
@@ -108,7 +210,7 @@ function StudentJobDetails() {
       </header>
 
       <main className="mx-auto max-w-6xl px-5 py-8">
-        <section className="rounded-2xl bg-gradient-to-r from-indigo-700 to-violet-600 p-7 text-white sm:p-9">
+        <section className="rounded-2xl bg-linear-to-r from-indigo-700 to-violet-600 p-7 text-white sm:p-9">
           <p className="text-sm font-medium text-indigo-100">
             {company.name || 'Placement opportunity'}
           </p>
@@ -272,11 +374,10 @@ function StudentJobDetails() {
                   </h3>
 
                   <span
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                      eligibility.canApply
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${eligibility.canApply
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                      }`}
                   >
                     {eligibility.canApply
                       ? 'Eligible'
@@ -343,11 +444,51 @@ function StudentJobDetails() {
                   </ul>
                 )}
 
-                {eligibility.canApply && (
-                  <p className="mt-5 rounded-xl bg-green-50 p-3 text-sm text-green-700">
-                    You're ready for the next step! Job application
-                    submission will be connected in our next milestone.
-                  </p>
+                {application ? (
+                  <div className="mt-5 rounded-xl border border-green-200 bg-green-50 p-4">
+
+                    <p className="font-semibold text-green-800">
+                      You have already applied for this job.
+                    </p>
+
+                    <p className="mt-1 text-sm text-green-700">
+                      Current status: {application.status}
+                    </p>
+
+                    <button
+                      onClick={() => navigate('/student/applications')}
+                      className="mt-4 w-full rounded-xl bg-green-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-green-700"
+                    >
+                      View My Applications
+                    </button>
+
+                  </div>
+
+                ) : eligibility.canApply ? (
+
+                  <div className="mt-5">
+
+                    <div className="rounded-xl bg-green-50 p-3 text-sm text-green-700">
+                      Congratulations! You meet the eligibility requirements.
+                      You can now apply for this opportunity.
+                    </div>
+
+                    <button
+                      onClick={handleApply}
+                      disabled={applying}
+                      className="mt-4 w-full rounded-xl bg-indigo-600 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {applying ? 'Submitting Application...' : 'Apply Now'}
+                    </button>
+
+                  </div>
+
+                ) : null}
+
+                {applicationMessage && (
+                  <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700">
+                    {applicationMessage}
+                  </div>
                 )}
               </section>
             )}

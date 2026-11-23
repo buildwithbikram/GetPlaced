@@ -14,6 +14,7 @@ import StudentCompanies from './pages/student/StudentCompanies';
 import StudentCompanyDetails from './pages/student/StudentCompanyDetails';
 import StudentJobs from './pages/student/StudentJobs';
 import StudentJobDetails from './pages/student/StudentJobDetails';
+import StudentApplications from './pages/student/StudentApplications';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 
@@ -58,7 +59,7 @@ function App() {
             path="/student/resume"
             element={<StudentResume />}
           />
-          
+
           <Route
             path="/student/companies"
             element={<StudentCompanies />}
@@ -77,6 +78,10 @@ function App() {
           <Route
             path="/student/jobs/:id"
             element={<StudentJobDetails />}
+          />
+          <Route
+            path="/student/applications"
+            element={<StudentApplications />}
           />
         </Route>
 
