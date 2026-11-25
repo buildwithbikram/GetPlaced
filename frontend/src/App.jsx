@@ -16,6 +16,8 @@ import StudentJobs from './pages/student/StudentJobs';
 import StudentJobDetails from './pages/student/StudentJobDetails';
 import StudentApplications from './pages/student/StudentApplications';
 
+import AdminApplicants from './pages/admin/AdminApplicants';
+
 import ProtectedRoute from './routes/ProtectedRoute';
 
 // Layout for public pages
@@ -84,7 +86,15 @@ function App() {
             element={<StudentApplications />}
           />
         </Route>
-
+        {/* Admin routes */}
+        <Route
+          element={<ProtectedRoute allowedRoles={['admin']} />}
+        >
+          <Route
+            path="/admin/jobs/:jobId/applicants"
+            element={<AdminApplicants />}
+          />
+        </Route>
       </Routes>
     </BrowserRouter>
   );
