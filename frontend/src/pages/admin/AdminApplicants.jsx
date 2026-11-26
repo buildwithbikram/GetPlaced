@@ -239,7 +239,7 @@ function AdminApplicants() {
                       Status
                     </th>
                     <th className="px-4 py-4 font-semibold">
-                      Action
+                      Applicant Details
                     </th>
                   </tr>
                 </thead>
@@ -301,7 +301,7 @@ function AdminApplicants() {
                             }
                             className="rounded-lg bg-indigo-50 px-3 py-2 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100"
                           >
-                            View Details
+                            View Applicant
                           </button>
                         </td>
                       </tr>

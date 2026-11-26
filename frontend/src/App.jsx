@@ -17,6 +17,7 @@ import StudentJobDetails from './pages/student/StudentJobDetails';
 import StudentApplications from './pages/student/StudentApplications';
 
 import AdminApplicants from './pages/admin/AdminApplicants';
+import AdminApplicationDetails from './pages/admin/AdminApplicationDetails';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 
@@ -93,6 +94,10 @@ function App() {
           <Route
             path="/admin/jobs/:jobId/applicants"
             element={<AdminApplicants />}
+          />
+          <Route
+            path="/admin/applications/:applicationId"
+            element={<AdminApplicationDetails />}
           />
         </Route>
       </Routes>

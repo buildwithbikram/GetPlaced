@@ -355,7 +355,7 @@ const getApplicationById = async (req, res) => {
     const application = await Application.findById(applicationId)
       .populate(
         'student',
-        'name email phone branch college cgpa graduationYear backlogs skills projects certifications'
+        'name email phone branch college cgpa graduationYear backlogs skills projects certifications resume.originalName resume.format resume.size resume.uploadedAt'
       )
       .populate({
         path: 'job',
@@ -512,10 +512,10 @@ const updateApplicationStatus = async (req, res) => {
 };
 
 module.exports = {
-  applyForJob, 
-  getMyApplications, 
-  withdrawApplication, 
-  getApplicantsForJob, 
-  getApplicationById, 
+  applyForJob,
+  getMyApplications,
+  withdrawApplication,
+  getApplicantsForJob,
+  getApplicationById,
   updateApplicationStatus
 };

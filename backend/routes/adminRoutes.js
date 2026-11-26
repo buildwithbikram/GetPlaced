@@ -1,4 +1,3 @@
-
 const express = require('express');
 
 const {
@@ -9,6 +8,10 @@ const {
   getAllStudents,
   getStudentById
 } = require('../controllers/adminStudentController');
+
+const {
+  downloadApplicantResume
+} = require('../controllers/adminResumeController');
 
 const { protect } = require('../middleware/authMiddleware');
 
@@ -39,6 +42,13 @@ router.get(
   protect,
   authorizeRoles('admin'),
   getStudentById
+);
+
+router.get(
+  '/admin/:applicationId/resume/download',
+  protect,
+  authorizeRoles('admin'),
+  downloadApplicantResume
 );
 
 module.exports = router;
