@@ -195,6 +195,131 @@ const getJobs = async (req, res) => {
   }
 };
 
+const getAllJobsForAdmin = async (req, res) => {
+  try {
+    const {
+      search = '',
+      status = 'all',
+      jobType = 'all',
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    // Validate filters
+    if (!['all', 'open', 'closed'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid job status filter'
+      });
+    }
+
+    const validJobTypes = [
+      'all',
+      'internship',
+      'full-time',
+      'part-time'
+    ];
+
+    if (!validJobTypes.includes(jobType)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid job type filter'
+      });
+    }
+
+    // Validate pagination
+    const currentPage = Number.parseInt(page, 10);
+    const pageLimit = Number.parseInt(limit, 10);
+
+    if (
+      !Number.isInteger(currentPage) ||
+      currentPage < 1 ||
+      !Number.isInteger(pageLimit) ||
+      pageLimit < 1 ||
+      pageLimit > 50
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid pagination parameters'
+      });
+    }
+
+    const query = {};
+
+    // Filter by status
+    if (status !== 'all') {
+      query.status = status;
+    }
+
+    // Filter by job type
+    if (jobType !== 'all') {
+      query.jobType = jobType;
+    }
+
+    // Search by title, location or company name
+    const trimmedSearch = search.trim();
+
+    if (trimmedSearch) {
+      const escapedSearch = trimmedSearch.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&'
+      );
+
+      const searchRegex = new RegExp(escapedSearch, 'i');
+
+      const matchingCompanies = await Company.find({
+        name: searchRegex
+      })
+        .select('_id')
+        .lean();
+
+      const companyIds = matchingCompanies.map(
+        company => company._id
+      );
+
+      query.$or = [
+        { title: searchRegex },
+        { location: searchRegex },
+        { company: { $in: companyIds } }
+      ];
+    }
+
+    const skip = (currentPage - 1) * pageLimit;
+
+    const [jobs, totalJobs] = await Promise.all([
+      Job.find(query)
+        .populate(
+          'company',
+          'name location website industry isActive'
+        )
+        .select('-__v')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageLimit)
+        .lean(),
+
+      Job.countDocuments(query)
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      count: jobs.length,
+      totalJobs,
+      currentPage,
+      totalPages: Math.ceil(totalJobs / pageLimit),
+      jobs
+    });
+
+  } catch (error) {
+    console.error('Get all admin jobs error:', error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
 const getJobById = async (req, res) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
@@ -442,6 +567,7 @@ const closeJob = async (req, res) => {
 module.exports = {
   createJob,
   getJobs,
+  getAllJobsForAdmin,
   getJobById,
   updateJob,
   closeJob
