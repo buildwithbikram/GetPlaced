@@ -18,6 +18,7 @@ import StudentApplications from './pages/student/StudentApplications';
 
 import AdminApplicants from './pages/admin/AdminApplicants';
 import AdminApplicationDetails from './pages/admin/AdminApplicationDetails';
+import AdminCompanies from './pages/admin/AdminCompanies';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 
@@ -98,6 +99,10 @@ function App() {
           <Route
             path="/admin/applications/:applicationId"
             element={<AdminApplicationDetails />}
+          />
+          <Route
+            path="/admin/companies"
+            element={<AdminCompanies />}
           />
         </Route>
       </Routes>
