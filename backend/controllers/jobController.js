@@ -527,20 +527,26 @@ const updateJob = async (req, res) => {
   }
 };
 
-const closeJob = async (req, res) => {
+const updateJobStatus = async (req, res) => {
   try {
-    if (!mongoose.isValidObjectId(req.params.id)) {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.isValidObjectId(id)) {
       return res.status(400).json({
         success: false,
         message: 'Invalid job ID'
       });
     }
 
-    const job = await Job.findByIdAndUpdate(
-      req.params.id,
-      { $set: { status: 'closed' } },
-      { new: true, runValidators: true }
-    );
+    if (!['open', 'closed'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Status must be either open or closed'
+      });
+    }
+
+    const job = await Job.findById(id);
 
     if (!job) {
       return res.status(404).json({
@@ -549,13 +555,30 @@ const closeJob = async (req, res) => {
       });
     }
 
+    if (
+      status === 'open' &&
+      job.applicationDeadline <= new Date()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot reopen an expired job. Update its deadline first.'
+      });
+    }
+
+    job.status = status;
+    await job.save();
+
+    const populatedJob = await Job.findById(job._id)
+      .populate('company', 'name location website');
+
     return res.status(200).json({
       success: true,
-      message: 'Job closed successfully',
-      job
+      message: `Job ${status === 'open' ? 'reopened' : 'closed'} successfully`,
+      job: populatedJob
     });
+
   } catch (error) {
-    console.error('Close job error:', error);
+    console.error('Update job status error:', error);
 
     return res.status(500).json({
       success: false,
@@ -570,5 +593,5 @@ module.exports = {
   getAllJobsForAdmin,
   getJobById,
   updateJob,
-  closeJob
+  updateJobStatus
 };

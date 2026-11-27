@@ -6,7 +6,7 @@ const {
   getAllJobsForAdmin,
   getJobById,
   updateJob,
-  closeJob
+  updateJobStatus
 } = require('../controllers/jobController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -27,6 +27,11 @@ router.get(
 );
 router.post('/', protect, authorizeRoles('admin'), createJob);
 router.put('/:id', protect, authorizeRoles('admin'), updateJob);
-router.delete('/:id', protect, authorizeRoles('admin'), closeJob);
+router.patch(
+  '/:id/status',
+  protect,
+  authorizeRoles('admin'),
+  updateJobStatus
+);
 
 module.exports = router;
